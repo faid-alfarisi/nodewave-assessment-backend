@@ -10,7 +10,7 @@ export const tasksRouter = new Hono<AppEnv>();
 tasksRouter.use('*', authMiddleware);
 
 const taskQueryBuilder = new BuildQueryFilter({
-  allowedFields: ['status', 'department', 'clientVisible', 'projectId', 'assigneeId', 'title'],
+  allowedFields: ['status', 'department', 'clientVisible', 'projectId', 'assigneeId', 'title', 'createdAt', 'version'],
   defaultSearchMode: 'insensitive',
 });
 
@@ -32,6 +32,13 @@ tasksRouter.get('/', async (c) => {
       ezFilterInput.searchFilters = JSON.parse(queryParams.searchFilters);
     } catch {
       ezFilterInput.searchFilters = {};
+    }
+  }
+  if (queryParams.rangedFilters) {
+    try {
+      ezFilterInput.rangedFilters = JSON.parse(queryParams.rangedFilters);
+    } catch {
+      ezFilterInput.rangedFilters = [];
     }
   }
   if (queryParams.page) ezFilterInput.page = parseInt(queryParams.page, 10);
