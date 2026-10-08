@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
-import { authMiddleware, requireRoles } from '../middlewares/auth';
+import { authMiddleware, requireRoles, type AppEnv } from '../middlewares/auth';
 import { Role } from '@prisma/client';
 
-export const projectsRouter = new Hono();
+export const projectsRouter = new Hono<AppEnv>();
 
 projectsRouter.use('*', authMiddleware);
 

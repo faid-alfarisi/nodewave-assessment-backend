@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "bun --watch index.ts",
     "start": "bun index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "db:push": "bun x prisma db push",
     "db:studio": "bun x prisma studio"
   },

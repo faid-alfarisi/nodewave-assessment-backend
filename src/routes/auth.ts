@@ -3,11 +3,11 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma';
 import { signToken } from '../lib/jwt';
-import { authMiddleware } from '../middlewares/auth';
+import { authMiddleware, type AppEnv } from '../middlewares/auth';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-export const authRouter = new Hono();
+export const authRouter = new Hono<AppEnv>();
 
 // Helper to save uploaded avatar file locally
 async function saveAvatarFile(file: File): Promise<string> {

@@ -2,11 +2,13 @@ import type { Context, Next } from 'hono';
 import { verifyToken, type TokenPayload } from '../lib/jwt';
 import { Role } from '@prisma/client';
 
-export type AuthContext = Context<{
+export type AppEnv = {
   Variables: {
     user: TokenPayload;
   };
-}>;
+};
+
+export type AuthContext = Context<AppEnv>;
 
 export async function authMiddleware(c: Context, next: Next) {
   const authHeader = c.req.header('Authorization');

@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { prisma } from '../lib/prisma';
-import { authMiddleware } from '../middlewares/auth';
+import { authMiddleware, type AppEnv } from '../middlewares/auth';
 import { Role } from '@prisma/client';
 
-export const reportsRouter = new Hono();
+export const reportsRouter = new Hono<AppEnv>();
 
 reportsRouter.use('*', authMiddleware);
 

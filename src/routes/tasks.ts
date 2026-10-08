@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
-import { authMiddleware, requireRoles } from '../middlewares/auth';
+import { authMiddleware, requireRoles, type AppEnv } from '../middlewares/auth';
 import { Role, TaskStatus } from '@prisma/client';
 import { BuildQueryFilter } from '@nodewave/prisma-ezfilter';
 
-export const tasksRouter = new Hono();
+export const tasksRouter = new Hono<AppEnv>();
 
 tasksRouter.use('*', authMiddleware);
 
@@ -155,7 +155,7 @@ tasksRouter.post('/', requireRoles(Role.PRODUCT_MANAGER), async (c) => {
     const { title, description, department, projectId, assigneeId, clientVisible, dependencyIds } = parsed.data;
     const user = c.get('user');
 
-    let initialStatus = TaskStatus.TODO;
+    let initialStatus: TaskStatus = TaskStatus.TODO;
     if (dependencyIds && dependencyIds.length > 0) {
       const prerequisites = await prisma.task.findMany({
         where: { id: { in: dependencyIds }, deletedAt: null },
@@ -421,7 +421,7 @@ tasksRouter.delete('/:id', requireRoles(Role.PRODUCT_MANAGER), async (c) => {
 
   await prisma.taskAuditLog.create({
     data: {
-      taskId: id,
+      taskId: task.id,
       userId: user.userId,
       changedColumn: 'deletedAt',
       oldValue: null,
