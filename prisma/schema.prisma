@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PRODUCT_MANAGER
+  INTERNAL_TEAM
+  CLIENT_GUEST
+}
+
+enum Department {
+  MANAGEMENT
+  UIUX
+  FRONTEND
+  BACKEND
+  CLIENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  fullName     String
+  avatarUrl    String?
+  role         Role
+  department   Department
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  projectsJoined ProjectMember[]
+  clientProjects Project[]        @relation("ClientProjects")
+  assignedTasks  Task[]           @relation("TaskAssignee")
+  auditLogs      TaskAuditLog[]
+  attachments    TaskAttachment[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  clientId    String?
+  client      User?     @relation("ClientProjects", fields: [clientId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  members ProjectMember[]
+  tasks   Task[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model Task {
+  id            String     @id @default(uuid())
+  title         String
+  description   String?
+  status        TaskStatus @default(TODO)
+  department    Department
+  clientVisible Boolean    @default(false)
+  version       Int        @default(1)
+  projectId     String
+  assigneeId    String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  // Relations
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee    User?            @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  attachments TaskAttachment[]
+  auditLogs   TaskAuditLog[]
+
+  // Task Dependencies
+  dependencies    TaskDependency[] @relation("DependentTask")
+  prerequisiteFor TaskDependency[] @relation("PrerequisiteTask")
+
+  @@map("tasks")
+}
+
+model TaskDependency {
+  id                 String   @id @default(uuid())
+  dependentTaskId    String
+  prerequisiteTaskId String
+  createdAt          DateTime @default(now())
+
+  dependentTask    Task @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  prerequisiteTask Task @relation("PrerequisiteTask", fields: [prerequisiteTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentTaskId, prerequisiteTaskId])
+  @@map("task_dependencies")
+}
+
+model TaskAttachment {
+  id           String    @id @default(uuid())
+  taskId       String
+  uploadedById String
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  task       Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
+
+  @@map("task_attachments")
+}
+
+model TaskAuditLog {
+  id            String   @id @default(uuid())
+  taskId        String
+  userId        String?
+  changedColumn String
+  oldValue      String?
+  newValue      String?
+  createdAt     DateTime @default(now())
+
+  task Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("task_audit_logs")
+}
+
